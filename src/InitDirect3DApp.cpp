@@ -1,4 +1,4 @@
-
+﻿
 #include "../Common/D3DApp.h"
 #include <DirectXColors.h>
 
@@ -7,6 +7,7 @@ using namespace DirectX;
 
 class InitDirect3DApp : public D3DApp
 {
+
 public:
 	InitDirect3DApp(HINSTANCE hInstance);
 	~InitDirect3DApp();
@@ -14,16 +15,35 @@ public:
 	virtual bool Initialize() override;
 
 private:
+
+    struct Vertex1
+    {
+        XMFLOAT3 Pos; // XMFloat 占4字节.
+        XMFLOAT3 Color;
+    };
+
+    struct Vertex2
+    {
+        XMFLOAT3 Pos;
+        XMFLOAT3 Normal;
+        XMFLOAT2 Tex0;
+        XMFLOAT2 Tex1;
+    };
+
+
 	virtual void OnResize() override;
 	virtual void Update(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
 
+
+    // 绘制几何体
+    void DrawGeometry();
 };
 
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE prevInstance, _In_ LPSTR cmdLine, _In_ int showCmd)
 {
-    // ����  ����ʱ�ڴ���
+    // 开启  运行时内存检测
 #if defined(DEBUG) | defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
@@ -63,59 +83,75 @@ bool InitDirect3DApp::Initialize()
 
 void InitDirect3DApp::OnResize()
 {
-    D3DApp::OnResize(); // ���ø��෽��
+    D3DApp::OnResize(); // 调用父类方法
 }
 
 void InitDirect3DApp::Update(const GameTimer& gt)
 {
 }
 
-// ÿ֡����
+// 每帧绘制
 void InitDirect3DApp::Draw(const GameTimer& gt)
 {
-    // �ظ�ʹ�� ��¼���������ڴ�
-    //  ֻ���� ��GPU������������б�ִ�����ʱ  ��������
+    // 重复使用 记录命令的相关内存
+    //  只有在 与GPU相关联的命令列表执行完成时  才能重置
     ThrowIfFailed(mDirectCmdListAlloc->Reset());
     ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
-    // ת����Դ״̬.  �� ��ʾ״̬ ת��Ϊ ��ȾĿ��״̬
+    // 转换资源状态.  从 显示状态 转换为 渲染目标状态
     CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
         D3D12_RESOURCE_STATE_PRESENT,
         D3D12_RESOURCE_STATE_RENDER_TARGET);
     mCommandList->ResourceBarrier(1, &resourceBarrier);
 
-    // �����ӿںͲü�����
+    // 设置视口和裁剪矩形
     mCommandList->RSSetViewports(1, &mScreenViewport);
     mCommandList->RSSetScissorRects(1, &mScissorRect);
 
-    // �����̨������ �� ��Ȼ�����
+    // 清除后台缓冲区 和 深度缓冲区
     mCommandList->ClearRenderTargetView(CurrentBackBufferView(), Colors::LightSteelBlue, 0, nullptr);
     mCommandList->ClearDepthStencilView(DepthStencilView(), D3D12_CLEAR_FLAG_DEPTH | D3D12_CLEAR_FLAG_STENCIL, 1.0f, 0, 0, nullptr);
 
-    // ָ��Ҫ��Ⱦ�Ļ�����
+    // 指定要渲染的缓冲区
     D3D12_CPU_DESCRIPTOR_HANDLE curBackBufferView = CurrentBackBufferView();
     D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView = DepthStencilView();
     mCommandList->OMSetRenderTargets(1, &curBackBufferView, true, &depthStencilView);
 
-    // ת����Դ.  �� ��ȾĿ��״̬ ת��Ϊ ��ʾ״̬
+    // 转换资源.  从 渲染目标状态 转换为 显示状态
     CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
         CurrentBackBuffer(),
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         D3D12_RESOURCE_STATE_PRESENT);
     mCommandList->ResourceBarrier(1, &barrier);
 
-    // ֹͣ��¼����
+    // 停止记录命令
     ThrowIfFailed(mCommandList->Close());
 
-    // �� ������� �������
+    // 将 命令加入 命令队列
     ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
     mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-    // ���� ��̨��������ǰ̨������
+    // 交换 后台缓冲区和前台缓冲区
     ThrowIfFailed(mSwapChain->Present(0, 0));
     mCurrBackBuffer = (mCurrBackBuffer + 1) % SwapChainBufferCount;
 
-    // �ȴ�����ִ�����
+    // 等待命令执行完毕
     FlushCommandQueue();
+}
+
+void InitDirect3DApp::DrawGeometry()
+{
+    // 输入数据 布局
+    D3D12_INPUT_ELEMENT_DESC desc1[] = {
+        //{语义, 语义后缀编号, 数据格式, 输入槽索引, 输入槽中首地址起始偏移, 实例化或顶点数数据, 实例化中数据步进值}
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+    D3D12_INPUT_ELEMENT_DESC desc2[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
 }

@@ -1,4 +1,4 @@
-
+ï»¿
 #include <windows.h>
 #include "GameTimer.h"
 
@@ -11,7 +11,7 @@ GameTimer::GameTimer()
 	mSecondsPerCount = 1.0 / (double)countsPerSec;
 }
 
-// ×ÜÊ±¼ä.  ²»°üÀ¨ÔİÍ£µÄÊ±¼ä
+// æ€»æ—¶é—´.  ä¸åŒ…æ‹¬æš‚åœçš„æ—¶é—´
 float GameTimer::TotalTime()const
 {
 	if( mStopped )

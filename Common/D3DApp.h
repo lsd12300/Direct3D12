@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #if defined(DEBUG) || defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
@@ -18,7 +18,7 @@ class D3DApp
 {
 protected:
     D3DApp(HINSTANCE hInstance);
-    D3DApp(const D3DApp& rhs) = delete; // " = delete"  ±íÊ¾½ûÓÃº¯Êı.  ´Ë´¦Îª½ûÖ¹¿½±´¹¹Ôìº¯Êı
+    D3DApp(const D3DApp& rhs) = delete; // " = delete"  è¡¨ç¤ºç¦ç”¨å‡½æ•°.  æ­¤å¤„ä¸ºç¦æ­¢æ‹·è´æ„é€ å‡½æ•°
     D3DApp& operator=(const D3DApp& rhs) = delete;
     virtual ~D3DApp();
 
@@ -41,10 +41,10 @@ public:
 protected:
     virtual void CreateRtvAndDsvDescriptorHeaps();
     virtual void OnResize();
-    virtual void Update(const GameTimer& gt) = 0; // "= 0"  È«Ğéº¯Êı.  ×ÓÀà±ØĞëÊµÏÖ
+    virtual void Update(const GameTimer& gt) = 0; // "= 0"  å…¨è™šå‡½æ•°.  å­ç±»å¿…é¡»å®ç°
     virtual void Draw(const GameTimer& gt) = 0;
 
-    // ´¦ÀíÊó±êÊÂ¼ş
+    // å¤„ç†é¼ æ ‡äº‹ä»¶
     virtual void OnMouseDown(WPARAM btnState, int x, int y) { }
     virtual void OnMouseUp(WPARAM btnState, int x, int y) { }
     virtual void OnMouseMove(WPARAM btnState, int x, int y) { }
@@ -74,16 +74,16 @@ protected:
 
     static D3DApp* mApp;
 
-    HINSTANCE mhAppInst = nullptr; // Ó¦ÓÃÊµÀı¾ä±ú
-    HWND      mhMainWnd = nullptr; // Ö÷´°¿Ú¾ä±ú
+    HINSTANCE mhAppInst = nullptr; // åº”ç”¨å®ä¾‹å¥æŸ„
+    HWND      mhMainWnd = nullptr; // ä¸»çª—å£å¥æŸ„
     bool      mAppPaused = false;
     bool      mMinimized = false;
     bool      mMaximized = false;
-    bool      mResizing = false;   // ´°¿Ú³ß´ç±ä»¯
-    bool      mFullscreenState = false;// È«ÆÁ
+    bool      mResizing = false;   // çª—å£å°ºå¯¸å˜åŒ–
+    bool      mFullscreenState = false;// å…¨å±
 
-    bool      m4xMsaaState = false;    // 4X MSAA ÊÇ·ñ¿ªÆô
-    UINT      m4xMsaaQuality = 0;      // 4X MSAA ²ÉÑùµÈ¼¶
+    bool      m4xMsaaState = false;    // 4X MSAA æ˜¯å¦å¼€å¯
+    UINT      m4xMsaaQuality = 0;      // 4X MSAA é‡‡æ ·ç­‰çº§
 
     GameTimer mTimer;
 
@@ -113,7 +113,7 @@ protected:
     UINT mDsvDescriptorSize = 0;
     UINT mCbvSrvUavDescriptorSize = 0;
 
-    // ×ÓÀàĞèÒªÔÚ¹¹Ôìº¯ÊıÀï ×Ô¶¨ÒåµÄ²ÎÊı
+    // å­ç±»éœ€è¦åœ¨æ„é€ å‡½æ•°é‡Œ è‡ªå®šä¹‰çš„å‚æ•°
     std::wstring mMainWndCaption = L"d3d App";
     D3D_DRIVER_TYPE md3dDriverType = D3D_DRIVER_TYPE_HARDWARE;
     DXGI_FORMAT mBackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;

@@ -1,4 +1,4 @@
-#include "D3DApp.h"
+ï»¿#include "D3DApp.h"
 #include <windowsx.h>
 
 
@@ -7,7 +7,7 @@ using namespace std;
 using namespace DirectX;
 
 
-// Èë¿Úº¯Êı
+// å…¥å£å‡½æ•°
 LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	return D3DApp::GetApp()->MsgProc(hwnd, msg, wParam, lParam);
@@ -16,7 +16,7 @@ LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 D3DApp::D3DApp(HINSTANCE hInstance)
 	: mhAppInst(hInstance)
 {
-	// ±£Ö¤Ö»ÓĞÒ»¸ö D3DApp
+	// ä¿è¯åªæœ‰ä¸€ä¸ª D3DApp
 	assert(mApp == nullptr);
 	mApp = this;
 }
@@ -43,7 +43,7 @@ HWND D3DApp::MainWnd()const
 	return mhMainWnd;
 }
 
-// ´°¿Ú ¿í¸ß±È
+// çª—å£ å®½é«˜æ¯”
 float D3DApp::AspectRatio()const
 {
 	return static_cast<float>(mClientWidth) / mClientHeight;
@@ -73,13 +73,13 @@ int D3DApp::Run()
 
 	while (msg.message != WM_QUIT)
 	{
-		// ¼ì²âÓĞ´°¿ÚÏûÏ¢, ²¢´¦ÀíÏûÏ¢
+		// æ£€æµ‹æœ‰çª—å£æ¶ˆæ¯, å¹¶å¤„ç†æ¶ˆæ¯
 		if (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		// ÎŞ´°¿ÚÏûÏ¢.  ½øÈëÓÎÏ·Ñ­»·
+		// æ— çª—å£æ¶ˆæ¯.  è¿›å…¥æ¸¸æˆå¾ªç¯
 		else
 		{
 			mTimer.Tick();
@@ -117,7 +117,7 @@ void D3DApp::CreateRtvAndDsvDescriptorHeaps()
 {
 	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
 	rtvHeapDesc.NumDescriptors = SwapChainBufferCount;
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV; // äÖÈ¾Ä¿±êÊÓÍ¼
+	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV; // æ¸²æŸ“ç›®æ ‡è§†å›¾
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
@@ -126,7 +126,7 @@ void D3DApp::CreateRtvAndDsvDescriptorHeaps()
 
 	D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
 	dsvHeapDesc.NumDescriptors = 1;
-	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV; // Éî¶ÈÄ£°åÊÓÍ¼
+	dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV; // æ·±åº¦æ¨¡æ¿è§†å›¾
 	dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	dsvHeapDesc.NodeMask = 0;
 	ThrowIfFailed(md3dDevice->CreateDescriptorHeap(
@@ -139,17 +139,17 @@ void D3DApp::OnResize()
 	assert(mSwapChain);
 	assert(mDirectCmdListAlloc);
 
-	// Ö´ĞĞÃüÁî¶ÓÁĞÄÚµÄÃüÁî
+	// æ‰§è¡Œå‘½ä»¤é˜Ÿåˆ—å†…çš„å‘½ä»¤
 	FlushCommandQueue();
 
 	ThrowIfFailed(mCommandList->Reset(mDirectCmdListAlloc.Get(), nullptr));
 
-	// ÊÍ·ÅÖ®Ç°µÄ ½»»»Á´×ÊÔ´
+	// é‡Šæ”¾ä¹‹å‰çš„ äº¤æ¢é“¾èµ„æº
 	for (int i = 0; i < SwapChainBufferCount; ++i)
 		mSwapChainBuffer[i].Reset();
 	mDepthStencilBuffer.Reset();
 
-	// µ÷Õû½»»»Á´³ß´ç
+	// è°ƒæ•´äº¤æ¢é“¾å°ºå¯¸
 	ThrowIfFailed(mSwapChain->ResizeBuffers(
 		SwapChainBufferCount,
 		mClientWidth, mClientHeight,
@@ -161,15 +161,15 @@ void D3DApp::OnResize()
 	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHeapHandle(mRtvHeap->GetCPUDescriptorHandleForHeapStart());
 	for (UINT i = 0; i < SwapChainBufferCount; i++)
 	{
-		// »ñÈ¡ ºóÌ¨»º³åÇø
+		// è·å– åå°ç¼“å†²åŒº
 		ThrowIfFailed(mSwapChain->GetBuffer(i, IID_PPV_ARGS(&mSwapChainBuffer[i])));
 
-		// ´´½¨ äÖÈ¾Ä¿±êÊÓÍ¼
+		// åˆ›å»º æ¸²æŸ“ç›®æ ‡è§†å›¾
 		md3dDevice->CreateRenderTargetView(mSwapChainBuffer[i].Get(), nullptr, rtvHeapHandle);
 		rtvHeapHandle.Offset(1, mRtvDescriptorSize);
 	}
 
-	// ´´½¨ Éî¶ÈÄ£°åÊÓÍ¼
+	// åˆ›å»º æ·±åº¦æ¨¡æ¿è§†å›¾
 	D3D12_RESOURCE_DESC depthStencilDesc;
 	depthStencilDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	depthStencilDesc.Alignment = 0;
@@ -210,20 +210,20 @@ void D3DApp::OnResize()
 	dsvDesc.Texture2D.MipSlice = 0;
 	md3dDevice->CreateDepthStencilView(mDepthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
 
-	// ½«×ÊÔ´ ´Ó³õÊ¼×´Ì¬ ×ª»»Îª Éî¶È»º³å×´Ì¬
+	// å°†èµ„æº ä»åˆå§‹çŠ¶æ€ è½¬æ¢ä¸º æ·±åº¦ç¼“å†²çŠ¶æ€
 	CD3DX12_RESOURCE_BARRIER rsourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(mDepthStencilBuffer.Get(),
 		D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE);
 	mCommandList->ResourceBarrier(1, &rsourceBarrier);
 
-	// ¹Ø±Õ ÃüÁî¶ÓÁĞ.  Í£Ö¹¼ÇÂ¼ÃüÁî
+	// å…³é—­ å‘½ä»¤é˜Ÿåˆ—.  åœæ­¢è®°å½•å‘½ä»¤
 	ThrowIfFailed(mCommandList->Close());
 	ID3D12CommandList* cmdsLists[] = { mCommandList.Get() };
 	mCommandQueue->ExecuteCommandLists(_countof(cmdsLists), cmdsLists);
 
-	// µÈ´ı³ß´ç±ä»¯ÃüÁîÍê³É
+	// ç­‰å¾…å°ºå¯¸å˜åŒ–å‘½ä»¤å®Œæˆ
 	FlushCommandQueue();
 
-	// ¸üĞÂÊÓ¿Ú
+	// æ›´æ–°è§†å£
 	mScreenViewport.TopLeftX = 0;
 	mScreenViewport.TopLeftY = 0;
 	mScreenViewport.Width = static_cast<float>(mClientWidth);
@@ -234,13 +234,13 @@ void D3DApp::OnResize()
 	mScissorRect = { 0, 0, mClientWidth, mClientHeight };
 }
 
-// ´°¿ÚÏûÏ¢
+// çª—å£æ¶ˆæ¯
 LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	switch (msg)
 	{
-		// WM_ACTIVATE ÔÚ´°¿Ú±»¼¤»î»òÒş²ØÊ± ´¥·¢
-		//  µ±´°¿Ú±»Òş²ØÊ± ÔİÍ£
+		// WM_ACTIVATE åœ¨çª—å£è¢«æ¿€æ´»æˆ–éšè—æ—¶ è§¦å‘
+		//  å½“çª—å£è¢«éšè—æ—¶ æš‚åœ
 	case WM_ACTIVATE:
 		if (LOWORD(wParam) == WA_INACTIVE)
 		{
@@ -254,30 +254,30 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 
-		// WM_SIZE ´°¿Ú³ß´ç±ä»¯´¥·¢
+		// WM_SIZE çª—å£å°ºå¯¸å˜åŒ–è§¦å‘
 	case WM_SIZE:
-		// ±£´æ×îĞÂ´°¿Ú ³ß´ç
+		// ä¿å­˜æœ€æ–°çª—å£ å°ºå¯¸
 		mClientWidth = LOWORD(lParam);
 		mClientHeight = HIWORD(lParam);
 		if (md3dDevice)
 		{
-			if (wParam == SIZE_MINIMIZED) // ×îĞ¡»¯
+			if (wParam == SIZE_MINIMIZED) // æœ€å°åŒ–
 			{
 				mAppPaused = true;
 				mMinimized = true;
 				mMaximized = false;
 			}
-			else if (wParam == SIZE_MAXIMIZED) // ×î´ó»¯
+			else if (wParam == SIZE_MAXIMIZED) // æœ€å¤§åŒ–
 			{
 				mAppPaused = false;
 				mMinimized = false;
 				mMaximized = true;
 				OnResize();
 			}
-			else if (wParam == SIZE_RESTORED) // ´°¿Ú»¹Ô­
+			else if (wParam == SIZE_RESTORED) // çª—å£è¿˜åŸ
 			{
 
-				// ´Ó×îĞ¡»¯×´Ì¬ »¹Ô­
+				// ä»æœ€å°åŒ–çŠ¶æ€ è¿˜åŸ
 				if (mMinimized)
 				{
 					mAppPaused = false;
@@ -285,7 +285,7 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 					OnResize();
 				}
 
-				// ´Ó×î´ó»¯×´Ì¬ »¹Ô­
+				// ä»æœ€å¤§åŒ–çŠ¶æ€ è¿˜åŸ
 				else if (mMaximized)
 				{
 					mAppPaused = false;
@@ -294,10 +294,10 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				}
 				else if (mResizing)
 				{
-					// µ±Íæ¼ÒÍÏ¶¯³ß´ç±ä»¯ÌõÊ±, ÓÉÓÚÊÇ³ÖĞøµÄ²Ù×÷Ã»±ØÒªÒ»Ö±¸üĞÂ»º³åÇø³ß´ç
-					//  ½öĞèÒªÔÚÍæ¼ÒËÉ¿ª´°¿Ú³ß´ç±ä»¯ÌõÊ± ´¥·¢ WM_EXITSIZEMOVEÏûÏ¢Ê± ÔÙ´¦Àí
+					// å½“ç©å®¶æ‹–åŠ¨å°ºå¯¸å˜åŒ–æ¡æ—¶, ç”±äºæ˜¯æŒç»­çš„æ“ä½œæ²¡å¿…è¦ä¸€ç›´æ›´æ–°ç¼“å†²åŒºå°ºå¯¸
+					//  ä»…éœ€è¦åœ¨ç©å®¶æ¾å¼€çª—å£å°ºå¯¸å˜åŒ–æ¡æ—¶ è§¦å‘ WM_EXITSIZEMOVEæ¶ˆæ¯æ—¶ å†å¤„ç†
 				}
-				else // ÔÚº¯Êı  SetWindowPos »ò mSwapChain->SetFullscreenState Ê±
+				else // åœ¨å‡½æ•°  SetWindowPos æˆ– mSwapChain->SetFullscreenState æ—¶
 				{
 					OnResize();
 				}
@@ -305,15 +305,15 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 		return 0;
 
-		// WM_EXITSIZEMOVE ¿ªÊ¼ÍÏ¶¯´°¿Ú³ß´çÌõÊ± ´¥·¢
+		// WM_EXITSIZEMOVE å¼€å§‹æ‹–åŠ¨çª—å£å°ºå¯¸æ¡æ—¶ è§¦å‘
 	case WM_ENTERSIZEMOVE:
 		mAppPaused = true;
 		mResizing = true;
 		mTimer.Stop();
 		return 0;
 
-		// WM_EXITSIZEMOVE ËÉ¿ª´°¿Ú³ß´çÌõÊ± ´¥·¢
-		//  ´Ë´¦¸ù¾İĞÂ´°¿Ú³ß´ç ÖØÖÃËùÓĞÄÚÈİ
+		// WM_EXITSIZEMOVE æ¾å¼€çª—å£å°ºå¯¸æ¡æ—¶ è§¦å‘
+		//  æ­¤å¤„æ ¹æ®æ–°çª—å£å°ºå¯¸ é‡ç½®æ‰€æœ‰å†…å®¹
 	case WM_EXITSIZEMOVE:
 		mAppPaused = false;
 		mResizing = false;
@@ -321,7 +321,7 @@ LRESULT D3DApp::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		OnResize();
 		return 0;
 
-		// WM_DESTROY ´°¿ÚÏú»ÙÊ± ´¥·¢
+		// WM_DESTROY çª—å£é”€æ¯æ—¶ è§¦å‘
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
@@ -408,7 +408,7 @@ bool D3DApp::InitMainWindow()
 bool D3DApp::InitDirect3D()
 {
 #if defined(DEBUG) || defined(_DEBUG) 
-	// ¿ªÆôµ÷ÊÔ²ã
+	// å¼€å¯è°ƒè¯•å±‚
 	{
 		ComPtr<ID3D12Debug> debugController;
 		ThrowIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)));
@@ -418,13 +418,13 @@ bool D3DApp::InitDirect3D()
 
 	ThrowIfFailed(CreateDXGIFactory1(IID_PPV_ARGS(&mdxgiFactory)));
 
-	// ´´½¨ Ó²¼şÉè±¸
+	// åˆ›å»º ç¡¬ä»¶è®¾å¤‡
 	HRESULT hardwareResult = D3D12CreateDevice(
-		nullptr,             // Ä¬ÈÏ ÏÔÊ¾ÊÊÅäÆ÷
+		nullptr,             // é»˜è®¤ æ˜¾ç¤ºé€‚é…å™¨
 		D3D_FEATURE_LEVEL_11_0,
 		IID_PPV_ARGS(&md3dDevice));
 
-	// ´´½¨ Èí¼şÊÊÅäÆ÷.   WARP (Windows Advanced Rasterization Platform) Windows¸ß¼¶¹âÕ¤»¯Æ½Ì¨
+	// åˆ›å»º è½¯ä»¶é€‚é…å™¨.   WARP (Windows Advanced Rasterization Platform) Windowsé«˜çº§å…‰æ …åŒ–å¹³å°
 	if (FAILED(hardwareResult))
 	{
 		ComPtr<IDXGIAdapter> pWarpAdapter;
@@ -436,17 +436,17 @@ bool D3DApp::InitDirect3D()
 			IID_PPV_ARGS(&md3dDevice)));
 	}
 
-	// Î§À¸.  ÓÃÓÚÍ¬²½ CPU ºÍ GPU
+	// å›´æ .  ç”¨äºåŒæ­¥ CPU å’Œ GPU
 	ThrowIfFailed(md3dDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE,
 		IID_PPV_ARGS(&mFence)));
 
-	// »ñÈ¡¸÷ÖÖÃèÊö·û½á¹¹´óĞ¡.  ²»Í¬ GPUÆ½Ì¨ÓĞ²»Ò»ÑùµÄ´óĞ¡
+	// è·å–å„ç§æè¿°ç¬¦ç»“æ„å¤§å°.  ä¸åŒ GPUå¹³å°æœ‰ä¸ä¸€æ ·çš„å¤§å°
 	mRtvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	mDsvDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 	mCbvSrvUavDescriptorSize = md3dDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-	// ¼ì²â ºóÌ¨»º³åÇø¸ñÊ½ Ö§³ÖµÄ 4X MSAA²ÉÑùÖÊÁ¿
-	//  ËùÓĞÖ§³Ö Direct3D 11 µÄÉè±¸Ö§³Ö ËùÓĞäÖÈ¾Ä¿±ê¸ñÊ½.  ËùÒÔ½öĞèÒª¼ì²â²ÉÑùÖÊÁ¿
+	// æ£€æµ‹ åå°ç¼“å†²åŒºæ ¼å¼ æ”¯æŒçš„ 4X MSAAé‡‡æ ·è´¨é‡
+	//  æ‰€æœ‰æ”¯æŒ Direct3D 11 çš„è®¾å¤‡æ”¯æŒ æ‰€æœ‰æ¸²æŸ“ç›®æ ‡æ ¼å¼.  æ‰€ä»¥ä»…éœ€è¦æ£€æµ‹é‡‡æ ·è´¨é‡
 	D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels;
 	msQualityLevels.Format = mBackBufferFormat;
 	msQualityLevels.SampleCount = 4;
@@ -485,18 +485,18 @@ void D3DApp::CreateCommandObjects()
 	ThrowIfFailed(md3dDevice->CreateCommandList(
 		0,
 		D3D12_COMMAND_LIST_TYPE_DIRECT,
-		mDirectCmdListAlloc.Get(), // ÃüÁî·ÖÅäÆ÷
+		mDirectCmdListAlloc.Get(), // å‘½ä»¤åˆ†é…å™¨
 		nullptr,                   // PipelineStateObject
 		IID_PPV_ARGS(mCommandList.GetAddressOf())));
 
-	// ¹Ø±ÕÃüÁî¶ÓÁĞ.  Í£Ö¹¼ÇÂ¼ÃüÁî
-	//   ÏÂ´ÎÊ¹ÓÃÊ± Í¨¹ı Reset ÖØĞÂÆôÓÃ, ¿ªÊ¼¼ÇÂ¼ÃüÁî
+	// å…³é—­å‘½ä»¤é˜Ÿåˆ—.  åœæ­¢è®°å½•å‘½ä»¤
+	//   ä¸‹æ¬¡ä½¿ç”¨æ—¶ é€šè¿‡ Reset é‡æ–°å¯ç”¨, å¼€å§‹è®°å½•å‘½ä»¤
 	mCommandList->Close();
 }
 
 void D3DApp::CreateSwapChain()
 {
-	// ÊÍ·ÅÖ®Ç°µÄ½»»»Á´×ÊÔ´.  ·ÀÖ¹ÖØ¸´´´½¨
+	// é‡Šæ”¾ä¹‹å‰çš„äº¤æ¢é“¾èµ„æº.  é˜²æ­¢é‡å¤åˆ›å»º
 	mSwapChain.Reset();
 
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -505,7 +505,7 @@ void D3DApp::CreateSwapChain()
 	sd.BufferDesc.RefreshRate.Numerator = 60;
 	sd.BufferDesc.RefreshRate.Denominator = 1;
 	sd.BufferDesc.Format = mBackBufferFormat;
-	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED; // ÖğĞĞÉ¨Ãè »ò ¸ôĞĞÉ¨Ãè
+	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED; // é€è¡Œæ‰«æ æˆ– éš”è¡Œæ‰«æ
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
 	sd.SampleDesc.Count = m4xMsaaState ? 4 : 1;
 	sd.SampleDesc.Quality = m4xMsaaState ? (m4xMsaaQuality - 1) : 0;
@@ -516,7 +516,7 @@ void D3DApp::CreateSwapChain()
 	sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	sd.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
-	// ½»»»Á´ ÒªÍ¨¹ı ÃüÁî¶ÓÁĞ½øĞĞË¢ĞÂ
+	// äº¤æ¢é“¾ è¦é€šè¿‡ å‘½ä»¤é˜Ÿåˆ—è¿›è¡Œåˆ·æ–°
 	ThrowIfFailed(mdxgiFactory->CreateSwapChain(
 		mCommandQueue.Get(),
 		&sd,
@@ -525,25 +525,25 @@ void D3DApp::CreateSwapChain()
 
 void D3DApp::FlushCommandQueue()
 {
-	// Ôö¼ÓÎ§À¸Öµ
+	// å¢åŠ å›´æ å€¼
 	mCurrentFence++;
 
 	// Add an instruction to the command queue to set a new fence point.  Because we 
 	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
 	// processing all the commands prior to this Signal().
-	// ÏòÃüÁî¶ÓÁĞ Ìí¼ÓÃüÁîÉèÖÃĞÂÎ§À¸µã
-	//  ÃüÁîĞèÒª GPU´¦Àí,  ËùÒÔÔÚ GPU´¦ÀíÍêÖ®Ç°µÄÃüÁîÖ®ºó ²Å»áÉèÖÃÎ§À¸µã
+	// å‘å‘½ä»¤é˜Ÿåˆ— æ·»åŠ å‘½ä»¤è®¾ç½®æ–°å›´æ ç‚¹
+	//  å‘½ä»¤éœ€è¦ GPUå¤„ç†,  æ‰€ä»¥åœ¨ GPUå¤„ç†å®Œä¹‹å‰çš„å‘½ä»¤ä¹‹å æ‰ä¼šè®¾ç½®å›´æ ç‚¹
 	ThrowIfFailed(mCommandQueue->Signal(mFence.Get(), mCurrentFence));
 
-	// ÔÚ CPU µÈ´ı GPU ´¦ÀíÍêÎ§À¸µãÇ°µÄËùÓĞÃüÁî
+	// åœ¨ CPU ç­‰å¾… GPU å¤„ç†å®Œå›´æ ç‚¹å‰çš„æ‰€æœ‰å‘½ä»¤
 	if (mFence->GetCompletedValue() < mCurrentFence)
 	{
 		HANDLE eventHandle = CreateEventEx(nullptr, std::to_wstring(false).c_str(), false, EVENT_ALL_ACCESS);
 
-		// Ô¤¶¨´¥·¢µÄÊÂ¼ş
+		// é¢„å®šè§¦å‘çš„äº‹ä»¶
 		ThrowIfFailed(mFence->SetEventOnCompletion(mCurrentFence, eventHandle));
 
-		// GPU ´¦Àíµ½Î§À¸µãÊ±  ´¥·¢Ô¤¶¨ÊÂ¼ş
+		// GPU å¤„ç†åˆ°å›´æ ç‚¹æ—¶  è§¦å‘é¢„å®šäº‹ä»¶
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
@@ -567,7 +567,7 @@ D3D12_CPU_DESCRIPTOR_HANDLE D3DApp::DepthStencilView()const
 	return mDsvHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
-// ¼ÆËãÃ¿ÃëµÄÆ½¾ùÖ¡Êı ºÍ Ã¿Ö¡Æ½¾ùºÁÃëÊ±³¤
+// è®¡ç®—æ¯ç§’çš„å¹³å‡å¸§æ•° å’Œ æ¯å¸§å¹³å‡æ¯«ç§’æ—¶é•¿
 void D3DApp::CalculateFrameStats()
 {
 	static int frameCnt = 0;
@@ -575,7 +575,7 @@ void D3DApp::CalculateFrameStats()
 
 	frameCnt++;
 
-	// Ã¿Ãë¼ÆËãÒ»´Î
+	// æ¯ç§’è®¡ç®—ä¸€æ¬¡
 	if ((mTimer.TotalTime() - timeElapsed) >= 1.0f)
 	{
 		float fps = (float)frameCnt; // fps = frameCnt / 1

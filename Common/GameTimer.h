@@ -1,4 +1,4 @@
-#ifndef GAMETIMER_H
+ï»¿#ifndef GAMETIMER_H
 #define GAMETIMER_H
 
 class GameTimer
@@ -6,13 +6,13 @@ class GameTimer
 public:
 	GameTimer();
 
-	float TotalTime()const; // µ¥Î»Ãë
-	float DeltaTime()const; // µ¥Î»Ãë
+	float TotalTime()const; // å•ä½ç§’
+	float DeltaTime()const; // å•ä½ç§’
 
-	void Reset(); // ÏûÏ¢Ñ­»·Ç° µ÷ÓÃ
-	void Start(); // È¡ÏûÔİÍ£Ê± µ÷ÓÃ
-	void Stop();  // ÔİÍ£Ê± µ÷ÓÃ
-	void Tick();  // Ã¿Ö¡µ÷ÓÃ
+	void Reset(); // æ¶ˆæ¯å¾ªç¯å‰ è°ƒç”¨
+	void Start(); // å–æ¶ˆæš‚åœæ—¶ è°ƒç”¨
+	void Stop();  // æš‚åœæ—¶ è°ƒç”¨
+	void Tick();  // æ¯å¸§è°ƒç”¨
 
 private:
 	double mSecondsPerCount;
