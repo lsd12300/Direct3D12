@@ -1,6 +1,8 @@
 ﻿
 #include "../Common/D3DApp.h"
 #include <DirectXColors.h>
+#include <array>
+#include "../Common/Utils.h"
 
 using namespace DirectX;
 
@@ -78,6 +80,8 @@ bool InitDirect3DApp::Initialize()
     if (!D3DApp::Initialize())
         return false;
 
+    DrawGeometry();
+
     return true;
 }
 
@@ -154,4 +158,85 @@ void InitDirect3DApp::DrawGeometry()
         {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
+
+
+    // 矩形顶点数据
+    std::array<Vertex1, 8> vertices = {
+        Vertex1({XMFLOAT3(-1.0f, -1.0f, -1.0f), XMFLOAT3(Colors::White)}),
+        Vertex1({XMFLOAT3(-1.0f, +1.0f, -1.0f), XMFLOAT3(Colors::Black)}),
+        Vertex1({XMFLOAT3(+1.0f, +1.0f, -1.0f), XMFLOAT3(Colors::Red)}),
+        Vertex1({XMFLOAT3(+1.0f, -1.0f, -1.0f), XMFLOAT3(Colors::Green)}),
+        Vertex1({XMFLOAT3(-1.0f, -1.0f, +1.0f), XMFLOAT3(Colors::Blue)}),
+        Vertex1({XMFLOAT3(-1.0f, +1.0f, +1.0f), XMFLOAT3(Colors::Yellow)}),
+        Vertex1({XMFLOAT3(+1.0f, +1.0f, +1.0f), XMFLOAT3(Colors::Cyan)}),
+        Vertex1({XMFLOAT3(+1.0f, -1.0f, +1.0f), XMFLOAT3(Colors::Magenta)})
+    };
+    std::array<std::uint16_t, 36> indices = {
+        // 前
+        0,1,2,
+        0,2,3,
+
+        // 后
+        4,6,5,
+        4,7,6,
+
+        // 左
+        4,5,1,
+        4,1,0,
+
+        // 右
+        3,2,6,
+        3,6,7,
+
+        // 上
+        1,5,6,
+        1,6,2,
+
+        // 下
+        4,0,3,
+        4,3,7
+    };
+
+    const UINT vbByteSize = (UINT)vertices.size() * sizeof(Vertex1);
+    const UINT ibByteSize = (UINT)indices.size() * sizeof(std::uint16_t);
+
+    // 默认堆缓冲区
+    ComPtr<ID3D12Resource> vertexBufferGPU = nullptr;
+    ComPtr<ID3D12Resource> vertexBufferUploader = nullptr;
+    vertexBufferGPU = Utils::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), &vertices, vbByteSize, vertexBufferUploader);
+
+    // 绑定到渲染流水线
+    D3D12_VERTEX_BUFFER_VIEW vbv; // 顶点缓冲区视图
+    vbv.BufferLocation = vertexBufferGPU->GetGPUVirtualAddress();
+    vbv.StrideInBytes = sizeof(Vertex1); // 每个元素字节数
+    vbv.SizeInBytes = 8 * sizeof(Vertex1); // 整个视图字节数
+    
+    // 绑定到  输入装配器阶段
+    D3D12_VERTEX_BUFFER_VIEW vertexBuffers[1] = { vbv };
+    mCommandList->IASetVertexBuffers(
+        0, // 起始输入槽
+        1, // 要绑定到输入槽的顶点缓冲区数量
+        vertexBuffers); // 顶点缓冲区数组地址
+
+
+    // 索引缓冲区
+    ComPtr<ID3D12Resource> indexBufferGPU = nullptr;
+    ComPtr<ID3D12Resource> indexBufferUploader = nullptr;
+    indexBufferGPU = Utils::CreateDefaultBuffer(md3dDevice.Get(), mCommandList.Get(), &indices, ibByteSize, indexBufferUploader);
+
+    D3D12_INDEX_BUFFER_VIEW ibv;
+    ibv.BufferLocation = indexBufferGPU->GetGPUVirtualAddress();
+    ibv.Format = DXGI_FORMAT_R16_UINT;
+    ibv.SizeInBytes = ibByteSize;
+
+    mCommandList->IASetIndexBuffer(&ibv);
+
+
+    mCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST); // 绘制的 拓扑图形
+    mCommandList->DrawIndexedInstanced(
+        indices.size(), // 每个物体实例顶点索引数量
+        1, // 要实例化的数量. GPU实例化参数
+        0, // 指定顶点缓冲区内第一个要绘制的顶点索引
+        0, // 本次绘制每个顶点索引偏移的值.  将多个顶点数组合并成一个后, 顶点索引不再是从0开始. 如: 两个三角形顶点合并成6元素顶点数组后, 第二个三角形的顶点索引从3开始
+        0); // GPU实例化参数
 }
