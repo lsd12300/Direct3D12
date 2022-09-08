@@ -37,7 +37,8 @@ public:
 		ID3D12Device* device, ID3D12GraphicsCommandList* cmdList,
 		const void* initData, UINT64 byteSize, ComPtr<ID3D12Resource>& uploadBuffer);
 
-	
+	// 计算常量缓冲区大小(必须是 256B的整数倍)
+	static UINT CalcConstantBufferByteSize(UINT byteSize);
 
 private:
 

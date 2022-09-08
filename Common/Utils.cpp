@@ -51,3 +51,10 @@ ComPtr<ID3D12Resource> Utils::CreateDefaultBuffer(ID3D12Device* device, ID3D12Gr
 
     return defaultBuffer;
 }
+
+UINT Utils::CalcConstantBufferByteSize(UINT byteSize)
+{
+    // 加上 255, 屏蔽低八位
+    // 如:  (300 + 255) & ~255 == 555 & ~255 == 0x022B & ~0x00FF == 0x022B & 0xFF00 == 0x0200 == 512
+    return (byteSize + 255) & ~255;
+}

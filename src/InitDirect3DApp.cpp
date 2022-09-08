@@ -3,8 +3,30 @@
 #include <DirectXColors.h>
 #include <array>
 #include "../Common/Utils.h"
+#include "../Common/MathHelper.h"
+#include "../Common/UploadBuffer.h"
 
 using namespace DirectX;
+
+
+struct Vertex1
+{
+    XMFLOAT3 Pos; // XMFloat 占4字节.
+    XMFLOAT3 Color;
+};
+
+struct Vertex2
+{
+    XMFLOAT3 Pos;
+    XMFLOAT3 Normal;
+    XMFLOAT2 Tex0;
+    XMFLOAT2 Tex1;
+};
+
+struct ObjectConstants
+{
+    XMFLOAT4X4 WorldViewProj = MathHelper::Identity4x4();
+};
 
 
 class InitDirect3DApp : public D3DApp
@@ -17,29 +39,30 @@ public:
 	virtual bool Initialize() override;
 
 private:
+    XMFLOAT2 mLastMousePos; // 上帧鼠标位置
+    float mTheta; // Box旋转
+    float mPhi;
+    float mRadius; // 相机可视范围半径
 
-    struct Vertex1
-    {
-        XMFLOAT3 Pos; // XMFloat 占4字节.
-        XMFLOAT3 Color;
-    };
+    XMFLOAT4X4 mWorld; // 模型空间到世界空间的 变换矩阵
+    XMFLOAT4X4 mView; // 世界空间到相机空间的 变换矩阵
+    XMFLOAT4X4 mProj; // 相机空间到裁剪空间的 变换矩阵
 
-    struct Vertex2
-    {
-        XMFLOAT3 Pos;
-        XMFLOAT3 Normal;
-        XMFLOAT2 Tex0;
-        XMFLOAT2 Tex1;
-    };
+    std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB; // 常量缓冲区,  存储n个物体的数据
 
 
 	virtual void OnResize() override;
 	virtual void Update(const GameTimer& gt) override;
 	virtual void Draw(const GameTimer& gt) override;
 
+    virtual void OnMouseMove(WPARAM btnState, int x, int y) override;
+
 
     // 绘制几何体
     void DrawGeometry();
+
+    // 常量缓冲区
+    void BuildConstantBuffers();
 };
 
 
@@ -92,6 +115,27 @@ void InitDirect3DApp::OnResize()
 
 void InitDirect3DApp::Update(const GameTimer& gt)
 {
+    // 旋转  球坐标 转换 笛卡尔坐标
+    float x = mRadius * sinf(mPhi) * cosf(mTheta);
+    float y = mRadius * sinf(mPhi) * sinf(mTheta);
+    float z = mRadius * cosf(mPhi);
+
+    // 观察矩阵
+    XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
+    XMVECTOR target = XMVectorZero();
+    XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+    XMStoreFloat4x4(&mView, view);
+
+    XMMATRIX world = XMLoadFloat4x4(&mWorld);
+    XMMATRIX proj = XMLoadFloat4x4(&mProj);
+    XMMATRIX worldViewProj = world * view * proj;
+
+    // 更新常量缓冲区
+    ObjectConstants objConstants;
+    XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+    mObjectCB->CopyData(0, objConstants);
 }
 
 // 每帧绘制
@@ -142,6 +186,33 @@ void InitDirect3DApp::Draw(const GameTimer& gt)
 
     // 等待命令执行完毕
     FlushCommandQueue();
+}
+
+void InitDirect3DApp::OnMouseMove(WPARAM btnState, int x, int y)
+{
+    if ((btnState & MK_LBUTTON) != 0) {
+        // 根据鼠标左键移动距离 计算旋转角度.
+        float dx = XMConvertToRadians(0.25f * static_cast<float>(x - mLastMousePos.x));
+        float dy = XMConvertToRadians(0.25f * static_cast<float>(y - mLastMousePos.y));
+
+        // 根据鼠标输入 更新相机绕立方体旋转的角度
+        mTheta += dx;
+        mPhi += dy;
+
+        mPhi = MathHelper::Clamp(mPhi, 0.1f, MathHelper::Pi - 0.1f);
+    }
+    else if ((btnState & MK_RBUTTON) != 0)
+    {
+        // 根据鼠标右键移动距离 计算缩放
+        float dx = 0.005f * static_cast<float>(x - mLastMousePos.x);
+        float dy = 0.005f * static_cast<float>(y - mLastMousePos.y);
+
+        mRadius += dx - dy;
+        mRadius = MathHelper::Clamp(mRadius, 3.0f, 15.0f);
+    }
+
+    mLastMousePos.x = x;
+    mLastMousePos.y = y;
 }
 
 void InitDirect3DApp::DrawGeometry()
@@ -239,4 +310,9 @@ void InitDirect3DApp::DrawGeometry()
         0, // 指定顶点缓冲区内第一个要绘制的顶点索引
         0, // 本次绘制每个顶点索引偏移的值.  将多个顶点数组合并成一个后, 顶点索引不再是从0开始. 如: 两个三角形顶点合并成6元素顶点数组后, 第二个三角形的顶点索引从3开始
         0); // GPU实例化参数
+}
+
+void InitDirect3DApp::BuildConstantBuffers()
+{
+    mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
 }
