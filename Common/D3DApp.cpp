@@ -1,5 +1,5 @@
 ﻿#include "D3DApp.h"
-#include <windowsx.h>
+#include <WindowsX.h>
 
 
 using Microsoft::WRL::ComPtr;

@@ -7,11 +7,18 @@
 #include <dxgi1_6.h>
 #include <D3Dcompiler.h>
 #include <DirectXMath.h>
+#include <DirectXPackedVector.h>
+#include <DirectXColors.h>
+#include <DirectXCollision.h>
 #include "d3dx12.h"
 
 #include <string>
 #include <wrl.h>
 #include <shellapi.h>
+
+#include <algorithm>
+#include <vector>
+#include <array>
 
 using namespace Microsoft::WRL;
 

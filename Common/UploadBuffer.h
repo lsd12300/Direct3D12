@@ -12,6 +12,8 @@ public:
 	UploadBuffer(ID3D12Device* device, UINT elementCount, bool isConstantBuffer) :
 		mIsConstantBuffer(isConstantBuffer)
 	{
+		mElementByteSize = sizeof(T);
+
 		if (mIsConstantBuffer)
 			mElementByteSize = Utils::CalcConstantBufferByteSize(sizeof(T));
 

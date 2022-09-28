@@ -1,12 +1,12 @@
 ﻿
 #include "../Common/D3DApp.h"
-#include <DirectXColors.h>
 #include <array>
 #include "../Common/Utils.h"
 #include "../Common/MathHelper.h"
 #include "../Common/UploadBuffer.h"
 
 using namespace DirectX;
+using namespace DirectX::PackedVector;
 
 
 struct Vertex1
@@ -49,6 +49,7 @@ private:
     XMFLOAT4X4 mProj; // 相机空间到裁剪空间的 变换矩阵
 
     std::unique_ptr<UploadBuffer<ObjectConstants>> mObjectCB; // 常量缓冲区,  存储n个物体的数据
+    ComPtr<ID3D12DescriptorHeap> mCbvHeap = nullptr;
 
 
 	virtual void OnResize() override;
@@ -60,6 +61,9 @@ private:
 
     // 绘制几何体
     void DrawGeometry();
+
+    // 常量缓冲区描述符
+    void BuildDescriptorHeap();
 
     // 常量缓冲区
     void BuildConstantBuffers();
@@ -103,6 +107,8 @@ bool InitDirect3DApp::Initialize()
     if (!D3DApp::Initialize())
         return false;
 
+    BuildDescriptorHeap();
+    BuildConstantBuffers();
     DrawGeometry();
 
     return true;
@@ -122,10 +128,11 @@ void InitDirect3DApp::Update(const GameTimer& gt)
 
     // 观察矩阵
     XMVECTOR pos = XMVectorSet(x, y, z, 1.0f);
-    XMVECTOR target = XMVectorZero();
+    //XMVECTOR target = XMVectorZero();
+    XMVECTOR target = XMVectorSet(0.0f, 0.0f, -10.0f, 1.0f);
     XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-    XMMATRIX view = XMMatrixLookAtLH(pos, target, up);
+    XMMATRIX view = DirectX::XMMatrixLookAtLH(pos, target, up);
     XMStoreFloat4x4(&mView, view);
 
     XMMATRIX world = XMLoadFloat4x4(&mWorld);
@@ -134,7 +141,7 @@ void InitDirect3DApp::Update(const GameTimer& gt)
 
     // 更新常量缓冲区
     ObjectConstants objConstants;
-    XMStoreFloat4x4(&objConstants.WorldViewProj, XMMatrixTranspose(worldViewProj));
+    XMStoreFloat4x4(&objConstants.WorldViewProj, DirectX::XMMatrixTranspose(worldViewProj));
     mObjectCB->CopyData(0, objConstants);
 }
 
@@ -312,7 +319,30 @@ void InitDirect3DApp::DrawGeometry()
         0); // GPU实例化参数
 }
 
+void InitDirect3DApp::BuildDescriptorHeap()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc;
+    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    cbvHeapDesc.NodeMask = 0;
+    ThrowIfFailed(md3dDevice->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&mCbvHeap)));
+}
+
 void InitDirect3DApp::BuildConstantBuffers()
 {
     mObjectCB = std::make_unique<UploadBuffer<ObjectConstants>>(md3dDevice.Get(), 1, true);
+
+    UINT objCBByteSize = Utils::CalcConstantBufferByteSize(sizeof(ObjectConstants));
+
+    D3D12_GPU_VIRTUAL_ADDRESS cbAddress = mObjectCB->Resource()->GetGPUVirtualAddress();
+
+    int boxCBufIndex = 0;
+    cbAddress += boxCBufIndex * objCBByteSize;
+
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
+    cbvDesc.BufferLocation = cbAddress;
+    cbvDesc.SizeInBytes = objCBByteSize;
+
+    md3dDevice->CreateConstantBufferView(&cbvDesc, mCbvHeap->GetCPUDescriptorHandleForHeapStart());
 }
